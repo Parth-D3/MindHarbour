@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0a6b5c;--teal-light:#e0f2ee;--teal-mid:#1a9c87;
+  --gold:#c47d1a;--gold-light:#fdf3e0;
+  --ink:#1a1a1a;--ink2:#444;--ink3:#888;
+  --bg:#f7f5f0;--white:#fff;--border:#ddd9d0;
+  --radius:14px;--shadow:0 2px 16px rgba(10,107,92,0.10);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+header{background:var(--teal);padding:28px 28px 20px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:-80px;right:-80px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,0.06)}
+header::after{content:'';position:absolute;bottom:-100px;left:5%;width:320px;height:320px;border-radius:50%;background:rgba(196,125,26,0.1)}
+.hinner{max-width:920px;margin:0 auto;position:relative;z-index:1}
+.htop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px}
+.htop-left{display:flex;align-items:center;gap:12px}
+.site-name{font-family:'Lora',serif;font-size:1.9rem;font-weight:700;color:#fff;letter-spacing:-0.5px}
+.site-name span{color:var(--gold-light);opacity:0.9}
+.tagline{font-size:0.9rem;color:rgba(255,255,255,0.75);font-weight:300}
+.lang-select-wrap{display:flex;align-items:center;gap:8px}
+.lang-select{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:6px 26px 6px 10px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.lang-select option{background:#0a6b5c;color:#fff}
+.emergency{background:var(--gold-light);border:1px solid #e8c97a;border-radius:var(--radius);padding:12px 18px;font-size:0.82rem;color:var(--ink2);margin-top:20px}
+.emergency strong{color:var(--gold)}
+.emg-title{font-weight:500;margin-bottom:4px;color:var(--ink)}
+.emg-links{display:flex;flex-wrap:wrap;gap:6px 16px}
+main{max-width:920px;margin:0 auto;padding:24px 16px 60px}
+.section-label{font-size:0.72rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:14px}
+.workspace{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:700px){.workspace{grid-template-columns:1fr}}
+.agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.agent-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 12px;cursor:pointer;transition:all 0.18s ease;text-align:left}
+.agent-card:hover{border-color:var(--teal-mid);box-shadow:var(--shadow);transform:translateY(-2px)}
+.agent-card.active{border-color:var(--teal);background:var(--teal-light)}
+.agent-emoji{font-size:1.3rem;margin-bottom:6px;display:block}
+.agent-name{font-size:0.78rem;font-weight:500;color:var(--ink2);line-height:1.3}
+.agent-card.active .agent-name{color:var(--teal)}
+.doc-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.doc-header{background:var(--gold);padding:12px 16px}
+.doc-header h3{font-family:'Lora',serif;color:#fff;font-size:0.95rem;font-weight:600}
+.doc-header p{font-size:0.75rem;color:rgba(255,255,255,0.85);margin-top:2px}
+.doc-list{padding:12px}
+.doc-btn{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;text-align:left;transition:all 0.15s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:10px}
+.doc-btn:hover{border-color:var(--gold);background:var(--gold-light)}
+.doc-btn:last-child{margin-bottom:0}
+.doc-icon{font-size:1.1rem;flex-shrink:0}
+.doc-title{font-size:0.82rem;font-weight:500;color:var(--ink)}
+.doc-desc{font-size:0.73rem;color:var(--ink3);margin-top:1px}
+.chat-area{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.chat-header{background:var(--teal);padding:12px 16px;display:flex;align-items:center;gap:10px}
+.chat-agent-name{font-family:'Lora',serif;color:#fff;font-size:1rem;font-weight:600}
+.chat-agent-sub{font-size:0.75rem;color:rgba(255,255,255,0.7);margin-top:1px}
+.chat-badges{margin-left:auto;display:flex;gap:6px}
+.badge{background:rgba(255,255,255,0.2);color:#fff;font-size:0.7rem;padding:3px 9px;border-radius:20px}
+.messages{height:400px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.msg{display:flex;gap:8px;animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{flex-direction:row-reverse}
+.bubble{max-width:80%;padding:10px 14px;border-radius:14px;font-size:0.85rem;line-height:1.55}
+.msg.bot .bubble{background:var(--teal-light);color:var(--ink);border-bottom-left-radius:4px}
+.msg.user .bubble{background:var(--teal);color:#fff;border-bottom-right-radius:4px}
+.bubble a{color:var(--teal);text-decoration:underline}
+.msg.user .bubble a{color:#a8e6d8}
+.pdf-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--teal);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.8rem;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:background 0.15s}
+.pdf-btn:hover{background:var(--teal-mid)}
+.avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:500;flex-shrink:0;margin-top:2px}
+.msg.bot .avatar{background:var(--teal);color:#fff}
+.msg.user .avatar{background:#d0e8e3;color:var(--teal)}
+.typing-indicator{display:flex;align-items:center;gap:4px;padding:4px 0}
+.typing-indicator span{width:6px;height:6px;background:var(--teal-mid);border-radius:50%;animation:bounce 1.2s infinite}
+.typing-indicator span:nth-child(2){animation-delay:0.2s}
+.typing-indicator span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.quick-prompts{padding:8px 12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:5px}
+.qp{background:var(--bg);border:1px solid var(--border);color:var(--ink2);font-size:0.73rem;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.qp:hover{background:var(--teal-light);border-color:var(--teal-mid);color:var(--teal)}
+.input-row{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.msg-input{flex:1;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:0.85rem;resize:none;outline:none;line-height:1.4;max-height:100px;min-height:38px;color:var(--ink);background:var(--bg);transition:border-color 0.15s}
+.msg-input:focus{border-color:var(--teal-mid);background:var(--white)}
+.send-btn{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;white-space:nowrap;transition:background 0.15s}
+.send-btn:hover{background:var(--teal-mid)}
+.send-btn:disabled{opacity:0.5;cursor:not-allowed}
+a{color:var(--teal)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hinner">
+    <div class="htop">
+      <div class="htop-left">
+        <span style="font-size:1.6rem">⚓</span>
+        <span class="site-name">Mind<span>Harbour</span></span>
+      </div>
+      <div class="lang-select-wrap">
+        <span style="font-size:0.78rem;color:rgba(255,255,255,0.75)">🌐</span>
+        <select class="lang-select" id="lang-select" onchange="onLangChange()">
+          <option value="en">English</option>
+          <optgroup label="── Middle East &amp; Central Asia">
+            <option value="ar">العربية — Arabic</option>
+            <option value="fa-AF">دری — Dari</option>
+            <option value="ps">پښتو — Pashto</option>
+            <option value="fa">فارسی — Farsi</option>
+            <option value="ku">Kurmancî — Kurdish</option>
+            <option value="tr">Türkçe — Turkish</option>
+          </optgroup>
+          <optgroup label="── Africa">
+            <option value="so">Soomaali — Somali</option>
+            <option value="am">አማርኛ — Amharic</option>
+            <option value="ti">ትግርኛ — Tigrinya</option>
+            <option value="om">Afaan Oromoo — Oromo</option>
+            <option value="sw">Kiswahili — Swahili</option>
+            <option value="fr">Français — French</option>
+            <option value="yo">Yorùbá — Yoruba</option>
+            <option value="ig">Igbo</option>
+          </optgroup>
+          <optgroup label="── Europe">
+            <option value="uk">Українська — Ukrainian</option>
+            <option value="ru">Русский — Russian</option>
+            <option value="ro">Română — Romanian</option>
+            <option value="pl">Polski — Polish</option>
+            <option value="sq">Shqip — Albanian</option>
+            <option value="ka">ქართული — Georgian</option>
+            <option value="pt">Português — Portuguese</option>
+            <option value="es">Español — Spanish</option>
+          </optgroup>
+          <optgroup label="── South &amp; Southeast Asia">
+            <option value="hi">हिन्दी — Hindi</option>
+            <option value="ur">اردو — Urdu</option>
+            <option value="bn">বাংলা — Bengali</option>
+            <option value="ta">தமிழ் — Tamil</option>
+            <option value="my">မြန်မာ — Burmese</option>
+            <option value="tl">Filipino / Tagalog</option>
+          </optgroup>
+          <optgroup label="── East Asia">
+            <option value="zh-CN">中文 — Chinese (Simplified)</option>
+            <option value="zh-TW">繁體中文 — Chinese (Traditional)</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+    <p class="tagline" id="ui-tagline">Your guide to settling into Ireland — information in your language, whenever you need it</p>
+    <div class="emergency">
+      <div class="emg-title">Emergency &amp; Key Contacts</div>
+      <div class="emg-links">
+        <span><strong>Emergency:</strong> 999 / 112</span>
+        <span><strong>FLAC (Legal):</strong> 1800 350 250</span>
+        <span><strong>MABS (Money):</strong> 0818 07 2000</span>
+        <span><strong>Samaritans:</strong> 116 123</span>
+        <span><strong>IRC:</strong> 01 764 5854</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="main-ui">
+    <p class="section-label" id="ui-choose-topic">Choose a topic</p>
+    <div class="workspace">
+      <div>
+        <div class="agent-grid" id="agent-grid"></div>
+        <div class="doc-panel">
+          <div class="doc-header">
+            <h3>📄 Generate a Document</h3>
+            <p>AI drafts a letter or form for you to download as PDF</p>
+          </div>
+          <div class="doc-list" id="doc-list"></div>
+        </div>
+      </div>
+      <div>
+        <div class="chat-area">
+          <div class="chat-header">
+            <div>
+              <div class="chat-agent-name" id="chat-agent-name">General Guide</div>
+              <div class="chat-agent-sub" id="chat-agent-sub">Ask anything about life in Ireland</div>
+            </div>
+            <div class="chat-badges">
+              <span class="badge" id="lang-badge">🌐 English</span>
+              <span class="badge">Claude</span>
+            </div>
+          </div>
+          <div class="messages" id="messages"></div>
+          <div class="quick-prompts" id="quick-prompts"></div>
+          <div class="input-row">
+            <textarea class="msg-input" id="msg-input" rows="1" placeholder="Type your question in any language…"></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">Send ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "http://localhost:3001";
+
+async function callAnthropicProxy(payload) {
+  const resp = await fetch(`${API_BASE}/api/anthropic/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await resp.json();
+
+  if (!resp.ok) {
+    throw new Error(data?.error || "Request failed");
+  }
+
+  return data;
+}
+
+// ── Document templates ────────────────────────────────────────────────────────
+const DOCUMENTS = [
+  {
+    id: 'bank_letter',
+    icon: '🏦',
+    title: 'Bank Account Request Letter',
+    desc: 'Letter requesting a Basic Payment Account',
+    agentContext: 'bank',
+    questions: [
+      "What is your full name?",
+      "What is your current address or accommodation (e.g. IPAS centre name and address)?",
+      "What type of ID do you have? (e.g. passport, IRP card, travel document)",
+      "Which bank are you writing to? (e.g. AIB, Bank of Ireland, Permanent TSB, or leave blank for generic)",
+      "Do you have a PPS number? If yes, what is it? If no, just say no."
+    ],
+    prompt: (answers, lang) => `Write a formal letter in ${lang} requesting a Basic Payment Account at an Irish bank. 
+The person's details are:
+- Full name: ${answers[0]}
+- Address: ${answers[1]}  
+- ID available: ${answers[2]}
+- Bank: ${answers[3] || 'Irish bank'}
+- PPS number: ${answers[4]}
+
+The letter should:
+1. Be addressed to "The Branch Manager" (or specific bank if given)
+2. Reference the EU Payment Accounts Directive and Irish law which gives every resident the right to a Basic Payment Account
+3. State the documents they are bringing (photo ID + proof of address)
+4. Be polite, professional, and firm about their legal right
+5. Be in ${lang} — if not English, also include an English translation below marked "English Translation:"
+6. End with a signature line for their name
+
+Return ONLY the letter text, no commentary.`
+  },
+  {
+    id: 'pps_letter',
+    icon: '🪪',
+    title: 'PPS Number Support Letter',
+    desc: 'Support letter for PPS application at Intreo',
+    agentContext: 'ppsn',
+    questions: [
+      "What is your full name?",
+      "What is your date of birth?",
+      "What is your current address or accommodation?",
+      "Why do you need a PPS number? (e.g. to apply for welfare, to start work, for a child's school enrolment)",
+      "What is your immigration status? (e.g. international protection applicant, refugee, Ukrainian temporary protection, other)"
+    ],
+    prompt: (answers, lang) => `Write a formal support letter in ${lang} to accompany a PPS number application at an Irish Intreo Centre.
+Details:
+- Full name: ${answers[0]}
+- Date of birth: ${answers[1]}
+- Address: ${answers[2]}
+- Reason for PPS: ${answers[3]}
+- Immigration status: ${answers[4]}
+
+The letter should:
+1. Be addressed to "The PPS Registration Officer, Intreo Centre"
+2. State their name, DOB, address and immigration status
+3. Clearly explain why they need a PPS number (the specific reason given)
+4. Note that they are entitled to a PPS number under Irish law
+5. Be polite and professional
+6. Be in ${lang} — if not English, also include an English translation below marked "English Translation:"
+7. End with a signature line
+
+Return ONLY the letter text, no commentary.`
+  },
+  {
+    id: 'welfare_letter',
+    icon: '💶',
+    title: 'Welfare / DEA Application Letter',
+    desc: 'Letter supporting a welfare or DEA application',
+    agentContext: 'welfare',
+    questions: [
+      "What is your full name?",
+      "What is your current address or IPAS accommodation?",
+      "What is your PPS number? (if you have one)",
+      "What benefit are you applying for? (e.g. Daily Expenses Allowance, Jobseeker's Allowance, Child Benefit)",
+      "What is your immigration status? (e.g. international protection applicant, refugee stamp 4, Ukrainian temporary protection)"
+    ],
+    prompt: (answers, lang) => `Write a formal letter in ${lang} supporting a welfare benefit application in Ireland.
+Details:
+- Full name: ${answers[0]}
+- Address: ${answers[1]}
+- PPS number: ${answers[2] || 'not yet assigned'}
+- Benefit applying for: ${answers[3]}
+- Immigration status: ${answers[4]}
+
+The letter should:
+1. Be addressed to "The Deciding Officer, Department of Social Protection"
+2. State the applicant's details and immigration status
+3. State clearly which benefit they are applying for and their eligibility basis
+4. Reference relevant entitlements (e.g. DEA for protection applicants, full welfare for stamp 4 holders)
+5. Be polite and professional
+6. Be in ${lang} — if not English, also include an English translation below marked "English Translation:"
+7. End with a signature line
+
+Return ONLY the letter text, no commentary.`
+  },
+  {
+    id: 'visa_letter',
+    icon: '🛂',
+    title: 'Visa Extension Support Letter',
+    desc: 'Letter supporting a visa or IRP renewal',
+    agentContext: 'visa',
+    questions: [
+      "What is your full name?",
+      "What is your nationality?",
+      "What is your current address in Ireland?",
+      "What type of permission or visa do you currently have? (e.g. Stamp 1, Stamp 2, Stamp 4, student visa)",
+      "What is the reason for your extension request? (e.g. continuing employment, continuing studies, family reasons)",
+      "When does your current permission expire?"
+    ],
+    prompt: (answers, lang) => `Write a formal letter in ${lang} supporting a visa or immigration permission extension in Ireland.
+Details:
+- Full name: ${answers[0]}
+- Nationality: ${answers[1]}
+- Address: ${answers[2]}
+- Current permission type: ${answers[3]}
+- Reason for extension: ${answers[4]}
+- Current permission expiry: ${answers[5]}
+
+The letter should:
+1. Be addressed to "The Immigration Officer, Irish Naturalisation and Immigration Service (INIS)"
+2. State their personal details, current permission, and expiry date
+3. Clearly explain the reason for the extension
+4. State any supporting documents they are including
+5. Be polite, professional, and respectful of the immigration process
+6. Be in ${lang} — if not English, also include an English translation below marked "English Translation:"
+7. End with a signature line
+
+Return ONLY the letter text, no commentary.`
+  },
+  {
+    id: 'landlord_letter',
+    icon: '🏠',
+    title: 'Letter to Landlord (Tenant Rights)',
+    desc: 'Assert your rights as a tenant in Ireland',
+    agentContext: 'general',
+    questions: [
+      "What is your full name?",
+      "What is your rental address?",
+      "What is the landlord's name? (if known)",
+      "What is the issue? (e.g. no heating, refused to return deposit, illegal eviction notice, discrimination, repairs not done)",
+      "How long have you been renting at this address?"
+    ],
+    prompt: (answers, lang) => `Write a formal letter in ${lang} from a tenant to their landlord asserting their rights under Irish tenancy law.
+Details:
+- Tenant name: ${answers[0]}
+- Rental address: ${answers[1]}
+- Landlord name: ${answers[2] || 'The Landlord'}
+- Issue: ${answers[3]}
+- Tenancy duration: ${answers[4]}
+
+The letter should:
+1. Be addressed to the landlord
+2. State the issue clearly and factually
+3. Reference the Residential Tenancies Act 2004 (as amended) and the tenant's legal rights
+4. State what action the tenant is requesting the landlord take, with a reasonable timeframe (e.g. 14 days)
+5. Note that if unresolved, the tenant may contact the Residential Tenancies Board (RTB) at 0818 30 30 37 or Threshold at 1800 454 454
+6. Be firm but professional
+7. Be in ${lang} — if not English, also include an English translation below marked "English Translation:"
+8. End with a signature line
+
+Return ONLY the letter text, no commentary.`
+  },
+  {
+    id: 'medical_card_letter',
+    icon: '🏥',
+    title: 'Medical Card Application Letter',
+    desc: 'Letter supporting a Medical Card application',
+    agentContext: 'general',
+    questions: [
+      "What is your full name?",
+      "What is your date of birth?",
+      "What is your current address?",
+      "What is your PPS number? (if you have one)",
+      "What is your immigration status?",
+      "Do you have any medical conditions that make this urgent? (optional)"
+    ],
+    prompt: (answers, lang) => `Write a formal letter in ${lang} supporting a Medical Card application to the HSE in Ireland.
+Details:
+- Full name: ${answers[0]}
+- Date of birth: ${answers[1]}
+- Address: ${answers[2]}
+- PPS number: ${answers[3] || 'not yet assigned'}
+- Immigration status: ${answers[4]}
+- Medical conditions: ${answers[5] || 'none specified'}
+
+The letter should:
+1. Be addressed to "The Medical Card Assessment Team, HSE"
+2. State the applicant's details
+3. Explain their entitlement to a Medical Card based on their immigration status
+4. Mention any medical urgency if relevant
+5. Note they can apply at hse.ie or call 0818 22 44 78
+6. Be in ${lang} — if not English, also include an English translation below marked "English Translation:"
+7. End with a signature line
+
+Return ONLY the letter text, no commentary.`
+  },
+  {
+    id: 'school_letter',
+    icon: '📚',
+    title: 'School Enrolment Letter',
+    desc: 'Letter requesting a school place for your child',
+    agentContext: 'general',
+    questions: [
+      "What is your full name (parent/guardian)?",
+      "What is your child's full name?",
+      "What is your child's date of birth?",
+      "What is your current address?",
+      "What school are you writing to? (name and address, or leave blank for generic)",
+      "What class or year should your child be in?"
+    ],
+    prompt: (answers, lang) => `Write a formal letter in ${lang} requesting a school place for a child in Ireland.
+Details:
+- Parent/guardian name: ${answers[0]}
+- Child's name: ${answers[1]}
+- Child's date of birth: ${answers[2]}
+- Address: ${answers[3]}
+- School: ${answers[4] || 'the school'}
+- Class/year: ${answers[5]}
+
+The letter should:
+1. Be addressed to "The Principal" (or school name if given)
+2. Introduce the parent and child
+3. Request a school place for the child
+4. Note that all children in Ireland have the right to education regardless of immigration status (Education Act 1998)
+5. Offer to provide any required documentation
+6. Be warm but professional
+7. Be in ${lang} — if not English, also include an English translation below marked "English Translation:"
+8. End with a signature line and contact details line
+
+Return ONLY the letter text, no commentary.`
+  }
+];
+
+// ── Agent definitions ─────────────────────────────────────────────────────────
+const AGENTS = {
+  bank:{ name:"Bank Account", emoji:"🏦", sub:"Opening accounts & credit unions",
+    system:`You help refugees open a bank account in Ireland. RULES FOR EVERY REPLY:
+- Use very short, simple sentences. Maximum 2-3 sentences per point.
+- Use simple words. No legal jargon.
+- Use numbered steps when explaining a process.
+- Never write long paragraphs.
+- If the user writes in another language, reply in that language.
+Key facts: Every person in Ireland has the RIGHT to a Basic Payment Account — banks cannot say no. Bring photo ID and a letter showing your address. Credit unions are easier and friendlier. MABS helpline: 0818 07 2000 (free).`,
+    prompts:["How do I open a bank account?","What documents do I need?","Can they refuse me?"]},
+  ppsn:{ name:"PPS Number", emoji:"🪪", sub:"Getting your personal ID number",
+    system:`You help refugees get a PPS Number in Ireland. RULES FOR EVERY REPLY:
+- Use very short, simple sentences. Maximum 2-3 sentences per point.
+- Use simple words. No jargon.
+- Use numbered steps when explaining a process.
+- Never write long paragraphs.
+- If the user writes in another language, reply in that language.
+Key facts: A PPS number is a personal ID number for Ireland. You need it for work, school, welfare, health. Go to your local Intreo Centre to apply. Bring your ID card or passport. It is completely FREE.`,
+    prompts:["What is a PPS number?","Where do I apply?","Is it free?"]},
+  welfare:{ name:"Welfare & Benefits", emoji:"💶", sub:"DEA, Jobseeker's, Child Benefit",
+    system:`You help refugees understand welfare payments in Ireland. RULES FOR EVERY REPLY:
+- Use very short, simple sentences. Maximum 2-3 sentences per point.
+- Use simple words. No jargon.
+- Use numbered steps when explaining a process.
+- Never write long paragraphs.
+- If the user writes in another language, reply in that language.
+Key facts: If you are an asylum seeker, you get €38.80 per week (called DEA). If you have Stamp 4, you can get the same payments as Irish people. If you are Ukrainian with temporary protection, you can also get full payments AND work. Go to Intreo to apply. MABS: 0818 07 2000 (free money advice).`,
+    prompts:["What money can I get?","What is DEA?","How do I apply?"]},
+  visa:{ name:"Visa & Immigration", emoji:"🛂", sub:"Status, extensions, Stamp 4",
+    system:`You help refugees understand their immigration status in Ireland. RULES FOR EVERY REPLY:
+- Use very short, simple sentences. Maximum 2-3 sentences per point.
+- Use simple words. No jargon.
+- Use numbered steps when explaining a process.
+- Never write long paragraphs.
+- If the user writes in another language, reply in that language.
+Key facts: If you applied for asylum, you do NOT need a visa. Your application is your permission to stay. Stamp 4 means you can live, work and study in Ireland. After 5 years you may apply for Irish citizenship. Free legal help: FLAC 1800 350 250, IRC 01 764 5854.`,
+    prompts:["What is my status?","How do I extend my visa?","What is Stamp 4?"]},
+  general:{ name:"General Guide", emoji:"🌍", sub:"Anything about life in Ireland",
+    system:`You are MindHarbour, a warm and helpful guide for refugees in Ireland. RULES FOR EVERY REPLY:
+- Use very short, simple sentences. Maximum 2-3 sentences per point.
+- Use simple words. Imagine the person is reading English for the first time.
+- Use numbered steps when explaining a process.
+- Never write long paragraphs. Keep replies short and clear.
+- If the user writes in another language, reply in that language.
+- Always be kind and encouraging.
+Key contacts: Emergency 999/112. MABS 0818 07 2000. FLAC 1800 350 250. Samaritans 116 123. Transport in Dublin: Bus, Luas tram, DART train. Money used: Euro (€).`,
+    prompts:["What should I do first?","How do I get around?","Where can I get free help?"]}
+};
+
+const LANG_NAMES = {
+  en:'English',ar:'Arabic',uk:'Ukrainian',so:'Somali',fr:'French',
+  ro:'Romanian',ru:'Russian',hi:'Hindi',ur:'Urdu','zh-CN':'Chinese (Simplified)',
+  'zh-TW':'Chinese (Traditional)','fa-AF':'Dari',ps:'Pashto',fa:'Farsi',
+  ku:'Kurdish',tr:'Turkish',am:'Amharic',ti:'Tigrinya',om:'Oromo',
+  sw:'Swahili',yo:'Yoruba',ig:'Igbo',pl:'Polish',sq:'Albanian',
+  ka:'Georgian',pt:'Portuguese',es:'Spanish',bn:'Bengali',ta:'Tamil',
+  my:'Burmese',tl:'Filipino'
+};
+
+const RTL = ['ar','fa-AF','ps','fa','ur','ku'];
+
+let currentAgent = 'general';
+let history = [];
+let selectedLang = 'en';
+let docMode = false;
+let currentDoc = null;
+let docAnswers = [];
+let docQuestionIndex = 0;
+
+function getLangName(code){ return LANG_NAMES[code] || 'English'; }
+
+function onLangChange(){
+  selectedLang = document.getElementById('lang-select').value;
+  document.getElementById('lang-badge').textContent = '🌐 ' + getLangName(selectedLang);
+  document.body.dir = RTL.includes(selectedLang) ? 'rtl' : 'ltr';
+  history = [];
+  docMode = false;
+  currentDoc = null;
+  document.getElementById('messages').innerHTML = '';
+  addWelcome();
+  renderQuickPrompts();
+}
+
+function renderAgents(){
+  const grid = document.getElementById('agent-grid');
+  grid.innerHTML = '';
+  Object.entries(AGENTS).forEach(([id, a]) => {
+    const card = document.createElement('div');
+    card.className = 'agent-card' + (id === currentAgent ? ' active' : '');
+    card.innerHTML = `<span class="agent-emoji">${a.emoji}</span><div class="agent-name">${a.name}</div>`;
+    card.onclick = () => switchAgent(id);
+    grid.appendChild(card);
+  });
+}
+
+function renderDocList(){
+  const list = document.getElementById('doc-list');
+  list.innerHTML = '';
+  DOCUMENTS.forEach(doc => {
+    const btn = document.createElement('button');
+    btn.className = 'doc-btn';
+    btn.innerHTML = `<span class="doc-icon">${doc.icon}</span><div class="doc-info"><div class="doc-title">${doc.title}</div><div class="doc-desc">${doc.desc}</div></div>`;
+    btn.onclick = () => startDocFlow(doc);
+    list.appendChild(btn);
+  });
+}
+
+function switchAgent(id){
+  currentAgent = id;
+  history = [];
+  docMode = false;
+  document.getElementById('chat-agent-name').textContent = AGENTS[id].name;
+  document.getElementById('chat-agent-sub').textContent = AGENTS[id].sub;
+  document.getElementById('messages').innerHTML = '';
+  renderAgents();
+  addWelcome();
+  renderQuickPrompts();
+}
+
+function addWelcome(){
+  const a = AGENTS[currentAgent];
+  addMsg('bot', `${a.emoji} Hello! I can help you with <strong>${a.name}</strong> in Ireland. Type your question in any language — I will reply in your language.<br/><br/>You can also use the <strong>📄 Generate a Document</strong> panel to create official letters you can download as PDF.`);
+}
+
+function renderQuickPrompts(){
+  const qp = document.getElementById('quick-prompts');
+  qp.innerHTML = '';
+  if(docMode) return;
+  AGENTS[currentAgent].prompts.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'qp';
+    btn.textContent = p;
+    btn.onclick = () => { if(!docMode) sendWithText(p); };
+    qp.appendChild(btn);
+  });
+}
+
+function startDocFlow(doc){
+  currentDoc = doc;
+  docAnswers = [];
+  docQuestionIndex = 0;
+  docMode = true;
+  history = [];
+
+  if(AGENTS[doc.agentContext]){
+    currentAgent = doc.agentContext;
+    document.getElementById('chat-agent-name').textContent = AGENTS[doc.agentContext].name;
+    document.getElementById('chat-agent-sub').textContent = AGENTS[doc.agentContext].sub;
+    renderAgents();
+    renderQuickPrompts();
+  }
+
+  document.getElementById('messages').innerHTML = '';
+  renderQuickPrompts();
+  addMsg('bot', `📄 <strong>${doc.title}</strong><br/><br/>I'll ask you a few questions and then generate a personalised PDF letter for you. You can answer in any language.<br/><br/><strong>Question 1 of ${doc.questions.length}:</strong><br/>${doc.questions[0]}`);
+}
+
+async function handleDocAnswer(text){
+  const question = currentDoc.questions[docQuestionIndex];
+  const validationPrompt = `You are checking if a person's answer makes sense for a form question.
+Question: "${question}"
+Answer given: "${text}"
+Does this answer make sense for this question? Reply with ONLY "yes" or "no".
+Examples of invalid: giving an address when asked for a name, giving a name when asked for a date, giving a random word.
+If the answer is partially right or close enough, say "yes". If completely wrong type of answer, say "no".`;
+
+  let isValid = true;
+  try {
+    const vData = await callAnthropicProxy({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 10,
+      messages: [{ role: 'user', content: validationPrompt }]
+    });
+
+    if (!vData.error) {
+      isValid = vData.content[0].text.toLowerCase().includes('yes');
+    }
+  } catch (e) {
+    isValid = true;
+  }
+
+  if(!isValid){
+    addMsg('bot', `⚠️ That doesn't look right for this question. Please try again.<br/><br/><strong>Question ${docQuestionIndex + 1} of ${currentDoc.questions.length}:</strong><br/>${question}`);
+    return;
+  }
+
+  docAnswers.push(text);
+  docQuestionIndex++;
+
+  if(docQuestionIndex < currentDoc.questions.length){
+    addMsg('bot', `✅ Got it!<br/><br/><strong>Question ${docQuestionIndex + 1} of ${currentDoc.questions.length}:</strong><br/>${currentDoc.questions[docQuestionIndex]}`);
+  } else {
+    addMsg('bot', '✍️ Generating your letter now…');
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+    addTyping();
+
+    try {
+      const langName = getLangName(selectedLang);
+      const letterPrompt = currentDoc.prompt(docAnswers, langName);
+
+      const data = await callAnthropicProxy({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: letterPrompt }]
+      });
+
+      removeTyping();
+
+      if(data.error){
+        addMsg('bot', `Sorry, there was an error generating the letter: ${data.error.message}`);
+      } else {
+        const letterText = data.content[0].text;
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'msg bot';
+        previewDiv.innerHTML = `<div class="avatar">MH</div><div class="bubble">
+          ✅ <strong>Your letter is ready!</strong><br/><br/>
+          <em style="font-size:0.8rem;color:var(--ink3)">Preview (first 300 characters):</em><br/>
+          <span style="font-size:0.82rem">${letterText.slice(0,300).replace(/\n/g,'<br/>')}…</span>
+          <br/><br/>
+          <button class="pdf-btn" onclick="downloadPDF(this)" data-text="${encodeURIComponent(letterText)}" data-title="${encodeURIComponent(currentDoc.title)}">⬇ Download as PDF</button>
+          <br/><br/>
+          <span style="font-size:0.78rem;color:var(--ink3)">Want to make changes? Just tell me what to change and I'll regenerate it.</span>
+        </div>`;
+        document.getElementById('messages').appendChild(previewDiv);
+        document.getElementById('messages').scrollTop = 99999;
+
+        history.push({ role: 'user', content: letterPrompt });
+        history.push({ role: 'assistant', content: letterText });
+        docMode = false;
+        renderQuickPrompts();
+      }
+    } catch(e){
+      removeTyping();
+      addMsg('bot', 'Something went wrong. Please check your server connection and try again.');
+    }
+    btn.disabled = false;
+  }
+}
+
+function downloadPDF(btnEl){
+  const text = decodeURIComponent(btnEl.getAttribute('data-text'));
+  const title = decodeURIComponent(btnEl.getAttribute('data-title'));
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+
+  const margin = 20;
+  const pageW = 210;
+  const maxW = pageW - margin * 2;
+  const lineH = 7;
+  let y = margin;
+
+  doc.setFillColor(10, 107, 92);
+  doc.rect(0, 0, 210, 18, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(13);
+  doc.setFont('helvetica','bold');
+  doc.text('MindHarbour — Ireland Welcome Guide', margin, 12);
+
+  doc.setTextColor(40,40,40);
+  y = 30;
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica','bold');
+  doc.text(title, margin, y);
+  y += 10;
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(120,120,120);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-IE', {day:'numeric',month:'long',year:'numeric'})}`, margin, y);
+  y += 3;
+
+  doc.setDrawColor(200,200,200);
+  doc.line(margin, y, pageW - margin, y);
+  y += 8;
+
+  doc.setTextColor(40,40,40);
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica','normal');
+
+  const lines = doc.splitTextToSize(text, maxW);
+  lines.forEach(line => {
+    if(y > 275){
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += lineH;
+  });
+
+  const pageCount = doc.getNumberOfPages();
+  for(let i = 1; i <= pageCount; i++){
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(160,160,160);
+    doc.text('MindHarbour — This document is a guide only. Always seek professional legal advice.', margin, 290);
+  }
+
+  doc.save(`${title.replace(/\s+/g,'-').toLowerCase()}.pdf`);
+}
+
+function addMsg(role, text){
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="avatar">${role === 'bot' ? 'MH' : '↑'}</div><div class="bubble">${text}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addTyping(){
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.id = 'typing';
+  div.innerHTML = `<div class="avatar">MH</div><div class="bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping(){
+  const t = document.getElementById('typing');
+  if(t) t.remove();
+}
+
+async function sendWithText(text){
+  document.getElementById('msg-input').value = text;
+  await sendMessage();
+}
+
+async function sendMessage(){
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  input.style.height = '';
+  addMsg('user', text);
+
+  if(docMode){
+    await handleDocAnswer(text);
+    return;
+  }
+
+  history.push({ role: 'user', content: text });
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  addTyping();
+
+  try {
+    const langName = getLangName(selectedLang);
+    const langInstruction = selectedLang !== 'en'
+      ? `\n\nCRITICAL: You MUST respond ENTIRELY in ${langName}. Every word must be in ${langName}.`
+      : `\n\nDetect the user's language and reply in that language.`;
+
+    const systemPrompt = AGENTS[currentAgent].system + langInstruction;
+
+    const claudeMessages = history.map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content
+    }));
+
+    const data = await callAnthropicProxy({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: claudeMessages
+    });
+
+    removeTyping();
+
+    if(data.error){
+      addMsg('bot', `Error: ${data.error.message}`);
+    } else {
+      const reply = data.content[0].text;
+      history.push({ role: 'assistant', content: reply });
+      addMsg('bot', reply.replace(/\n/g, '<br/>'));
+    }
+  } catch(e){
+    removeTyping();
+    addMsg('bot', 'Something went wrong. Please check your server connection and try again.');
+  }
+  btn.disabled = false;
+}
+
+document.getElementById('msg-input').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+document.getElementById('msg-input').addEventListener('input', function(){
+  this.style.height = '';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  renderAgents();
+  renderDocList();
+  addWelcome();
+  renderQuickPrompts();
+});
+</script>
+</body>
+</html>
